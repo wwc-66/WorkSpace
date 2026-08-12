@@ -1,30 +1,82 @@
-from dashscope import Generation
+import os
+import requests
+import json
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class LLMClient:
-    def __init__(self, api_key: str, model:str):
-        self.api_key = api_key
-        self.model = model
+    def __init__(self):
+        self.default_api_key = os.getenv("DASHSCOPE_API_KEY")
+        self.default_model = os.getenv("LLM_MODEL", "qwen-plus")
+        self.default_provider = os.getenv("LLM_PROVIDER", "dashscope")  # 新增：默认 provider
+        self.default_base_url = os.getenv("LLM_BASE_URL", None)  # 新增：自定义 API 地址
 
-    def generate(self, prompt: str):
-        #1.调用dashscope的Generation.call方法
-        #Generation.call是dashscope提供的同步调用接口
-        #它接收一个prompt和model，返回一个响应对象
+    def generate(self, prompt: str, api_key: str = None, model: str = None, provider: str = None, base_url: str = None) -> str:
+        _api_key = api_key or self.default_api_key
+        _model = model or self.default_model
+        _provider = provider or self.default_provider
+        _base_url = base_url or self.default_base_url
+
+        if _provider == "dashscope":
+            return self._call_dashscope(prompt, _api_key, _model)
+        elif _provider == "openai_compatible":
+            return self._call_openai_compatible(prompt, _api_key, _model, _base_url)
+        else:
+            raise ValueError(f"不支持的 provider: {_provider}")
+
+    def _call_dashscope(self, prompt: str, api_key: str, model: str) -> str:
+        from dashscope import Generation
         response = Generation.call(
-            model = self.model,     #指定使用哪个模型
-            prompt = prompt,        #用户输入的文本（提示词）
-            api_key = self.api_key  #用户的API Key
+            model=model,
+            prompt=prompt,
+            api_key=api_key
         )
-
-        #2.从响应对象中提取文本
-        #response.output.text是模型返回的文本内容
-        #Generation返回的响应结构是固定的：output下有一个text字段
         return response.output.text
 
-    def generate_with_messages(self, messages: list[dict]) -> str:
-        """支持多轮对话的生成方法"""
+    def _call_openai_compatible(self, prompt: str, api_key: str, model: str, base_url: str = None) -> str:
+        import openai
+        client = openai.OpenAI(
+            api_key=api_key,
+            base_url=base_url or "https://api.deepseek.com/v1"
+        )
+        response = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response.choices[0].message.content
+
+    # 保留 generate_with_messages 的多轮对话版本，类似修改
+    def generate_with_messages(self, messages: list[dict], api_key: str = None, model: str = None, provider: str = None, base_url: str = None) -> str:
+        _api_key = api_key or self.default_api_key
+        _model = model or self.default_model
+        _provider = provider or self.default_provider
+        _base_url = base_url or self.default_base_url
+
+        if _provider == "dashscope":
+            return self._call_dashscope_messages(messages, _api_key, _model)
+        elif _provider == "openai_compatible":
+            return self._call_openai_compatible_messages(messages, _api_key, _model, _base_url)
+        else:
+            raise ValueError(f"不支持的 provider: {_provider}")
+
+    def _call_dashscope_messages(self, messages: list[dict], api_key: str, model: str) -> str:
+        from dashscope import Generation
         response = Generation.call(
-            model=self.model,
+            model=model,
             messages=messages,
-            api_key=self.api_key
+            api_key=api_key
         )
         return response.output.text
+
+    def _call_openai_compatible_messages(self, messages: list[dict], api_key: str, model: str, base_url: str = None) -> str:
+        import openai
+        client = openai.OpenAI(
+            api_key=api_key,
+            base_url=base_url or "https://api.deepseek.com/v1"
+        )
+        response = client.chat.completions.create(
+            model=model,
+            messages=messages
+        )
+        return response.choices[0].message.content

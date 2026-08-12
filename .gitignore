@@ -5,3 +5,5 @@ __pycache__/
 .vscode/
 *.log
 .DS_Store
+rag_data/
+frontend/

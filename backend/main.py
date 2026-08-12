@@ -1,8 +1,11 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi import UploadFile, File
+import shutil
 from pydantic import BaseModel
 from backend.llm_client import LLMClient
 from backend.vector_store import VectorStore
-from backend.document_processor import read_txt, chunk_text
+from backend.document_processor import read_txt, chunk_text, read_directory
 import os
 from dotenv import load_dotenv
 import logging
@@ -14,33 +17,55 @@ load_dotenv()
 
 app = FastAPI(title="Workspace AI Core")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://127.0.0.1:3000", "http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 class GenerateRequest(BaseModel):
     prompt: str
+    api_key: str = None
+    model: str = None
+    provider: str = None
+    base_url: str = None
 
 class AskRequest(BaseModel):
     question: str
+    api_key: str = None
+    model: str = None
+    provider: str = None
+    base_url: str = None
 
 api_key = os.getenv("DASHSCOPE_API_KEY")
 model = "qwen-plus"
 
-llm_client = LLMClient(api_key=api_key, model=model)
+llm_client = LLMClient()
 
 # ===== 初始化向量存储 =====
 # 读取测试文档并切分
 # 替换原来直接写 chunk_size=500, overlap=50 的地方
 chunk_size = int(os.getenv("CHUNK_SIZE", "500"))
 overlap = int(os.getenv("CHUNK_OVERLAP", "50"))
-doc_path = os.getenv("DOCUMENT_PATH", "test_data/sample.txt")
 
-# 读取文档时使用 doc_path
-doc_content = read_txt(doc_path)
-chunks = chunk_text(doc_content, chunk_size=chunk_size, overlap=overlap)
-logger.info(f"已加载文档: {doc_path}, 共 {len(doc_content)} 字符")
-logger.info(f"切分为 {len(chunks)} 个块")
+doc_path = os.getenv("DOCUMENT_PATH", "rag_data")
+documents = read_directory(doc_path)
 
+all_chunks = []
+total_chars = 0
+for doc in documents:
+    chunks = chunk_text(doc["content"], chunk_size=chunk_size, overlap=overlap)
+    total_chars += len(doc["content"])
+    # 给每个 chunk 打上来源文件名标签
+    for chunk in chunks:
+        all_chunks.append(f"[来源: {doc['filename']}]\n{chunk}")
+    logger.info(f"已加载文档: {doc['filename']}, 共 {len(doc['content'])} 字符, 切分为 {len(chunks)} 个块")
+
+logger.info(f"全部文档: 共 {len(documents)} 个文件, {total_chars} 字符, 总计 {len(all_chunks)} 个块")
 vector_store = VectorStore(api_key=api_key)
-vector_store.add_chunks(chunks)
-print(f"Workspace 已加载 {len(chunks)} 个文档块")
+vector_store.add_chunks(all_chunks)
 # =========================
 
 @app.get("/health")
@@ -49,7 +74,13 @@ def health():
 
 @app.post("/generate")
 def generate(req: GenerateRequest):
-    response = llm_client.generate(req.prompt)
+    response = llm_client.generate(
+        prompt=req.prompt,
+        api_key=req.api_key,
+        model=req.model,
+        provider=req.provider,
+        base_url=req.base_url
+    )
     return {"response": response}
 
 @app.post("/ask")
@@ -77,7 +108,13 @@ def ask(req: AskRequest):
     
     # 5. 调用 LLM （带错误处理）
     try:
-        response = llm_client.generate(prompt)
+        response = llm_client.generate(
+            prompt=prompt,
+            api_key=req.api_key,
+            model=req.model,
+            provider=req.provider,
+            base_url=req.base_url
+        )
         logger.info(f"生成回答，长度 {len(response)} 字符")
     except Exception as e:
         return {'error': f'模型调用失败: {str(e)}'}
@@ -86,3 +123,25 @@ def ask(req: AskRequest):
         "answer": response,
         "sources": [chunk[:100] + "..." for chunk, _ in results]  # 附上来源摘要
     }
+
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    # 确保目录存在
+    os.makedirs("rag_data", exist_ok=True)
+    file_path = os.path.join("rag_data", file.filename)
+
+    # 保存文件
+    with open(file_path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+
+    # 读取内容
+    with open(file_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    # 切分并向量化
+    from backend.document_processor import chunk_text
+    chunks = chunk_text(content, chunk_size=500, overlap=50)
+    tagged_chunks = [f"[来源: {file.filename}]\n{chunk}" for chunk in chunks]
+    vector_store.add_chunks(tagged_chunks)
+
+    return {"status": "ok", "filename": file.filename, "chunks": len(chunks)}

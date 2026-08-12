@@ -1,3 +1,21 @@
+import os
+
+def read_directory(dir_path: str) -> list[dict]:
+    """
+    读取目录下所有文本文件，返回 [{"filename": "a.txt", "content": "..."}, ...]
+    """
+    results = []
+    for filename in os.listdir(dir_path):
+        if filename.endswith(('.txt', '.md')):
+            file_path = os.path.join(dir_path, filename)
+            with open(file_path, "r", encoding="utf-8") as f:
+                content = f.read()
+                results.append({
+                    "filename": filename,
+                    "content": content
+                })
+    return results
+
 def read_txt(file_path: str) -> str:
     """读取txt文件内容"""
     with open(file_path, 'r', encoding='utf-8') as file:
