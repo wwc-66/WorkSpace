@@ -9,6 +9,7 @@ from backend.document_processor import read_txt, chunk_text, read_directory
 import os
 from dotenv import load_dotenv
 import logging
+from backend.session_manager import SessionManager
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -27,6 +28,7 @@ app.add_middleware(
 
 class GenerateRequest(BaseModel):
     prompt: str
+    session_id: str = None
     api_key: str = None
     model: str = None
     provider: str = None
@@ -34,6 +36,7 @@ class GenerateRequest(BaseModel):
 
 class AskRequest(BaseModel):
     question: str
+    session_id: str = None
     api_key: str = None
     model: str = None
     provider: str = None
@@ -43,6 +46,7 @@ api_key = os.getenv("DASHSCOPE_API_KEY")
 model = "qwen-plus"
 
 llm_client = LLMClient()
+session_manager = SessionManager()
 
 # ===== 初始化向量存储 =====
 # 读取测试文档并切分
@@ -74,54 +78,76 @@ def health():
 
 @app.post("/generate")
 def generate(req: GenerateRequest):
-    response = llm_client.generate(
-        prompt=req.prompt,
+    # 1. 获取或创建会话
+    session_id = session_manager.get_or_create_session(req.session_id)[0]
+
+    # 2. 将用户消息加入会话历史
+    session_manager.add_message(session_id, "user", req.prompt)
+
+    # 3. 获取完整上下文
+    context = session_manager.get_full_context(session_id)
+
+    # 4. 调用模型
+    response = llm_client.generate_with_messages(
+        messages=context,
         api_key=req.api_key,
         model=req.model,
         provider=req.provider,
         base_url=req.base_url
     )
-    return {"response": response}
+
+    # 5. 将助手回复加入会话历史
+    session_manager.add_message(session_id, "assistant", response)
+
+    return {
+        "response": response,
+        "session_id": session_id
+    }
 
 @app.post("/ask")
 def ask(req: AskRequest):
-    # 1. 检查是否有文档
+    # 1. 检查文档
     if len(vector_store.chunks) == 0:
-        return {'error': '请先上传文档'}
-    
+        return {"error": "请先上传文档"}
+
     # 2. 检索相关文档块
     results = vector_store.search(req.question, top_k=3)
-    logger.info(f"检索到 {len(results)} 个相关块")
-
-    # 3. 检查检索结果的相关度是否足够（阈值设为0.7）
     if results and results[0][1] < 0.7:
-        return {'answer': '未找到足够相关的信息，请尝试换一种问法或上传更相关的文档。'}
-    
-    # 4. 构造 Prompt
+        return {"answer": "未找到足够相关的信息，请尝试换一种问法或上传更相关的文档。"}
+
+    # 3. 构造上下文
     context = "\n\n".join([chunk for chunk, _ in results])
-    prompt = f"""请基于以下资料回答用户的问题。如果资料中没有相关信息，请如实告知。
-                资料：{context}
 
-                用户问题：{req.question}
+    # 4. 获取或创建会话
+    session_id = session_manager.get_or_create_session(req.session_id)[0]
 
-                请用简洁、准确的语言回答。"""
-    
-    # 5. 调用 LLM （带错误处理）
+    # 5. 将用户消息（含检索上下文）加入会话历史
+    # 注意：这里把检索结果作为用户消息的一部分存入，让模型能回顾
+    session_manager.add_message(session_id, "user", f"[资料参考]\n{context}\n\n[用户问题]\n{req.question}")
+
+    # 6. 获取完整上下文
+    full_context = session_manager.get_full_context(session_id)
+
+    # 7. 调用模型
     try:
-        response = llm_client.generate(
-            prompt=prompt,
+        response = llm_client.generate_with_messages(
+            messages=full_context,
             api_key=req.api_key,
             model=req.model,
             provider=req.provider,
             base_url=req.base_url
         )
-        logger.info(f"生成回答，长度 {len(response)} 字符")
     except Exception as e:
-        return {'error': f'模型调用失败: {str(e)}'}
-    
+        # 会话已创建，返回 session_id 让前端保持同一会话
+        return {"error": f"模型调用失败: {str(e)}", "session_id": session_id}
+
+    # 8. 将助手回复加入会话历史
+    session_manager.add_message(session_id, "assistant", response)
+
     return {
         "answer": response,
-        "sources": [chunk[:100] + "..." for chunk, _ in results]  # 附上来源摘要
+        "session_id": session_id,
+        "sources": [chunk[:100] + "..." for chunk, _ in results]
     }
 
 @app.post("/upload")
@@ -145,3 +171,31 @@ async def upload_file(file: UploadFile = File(...)):
     vector_store.add_chunks(tagged_chunks)
 
     return {"status": "ok", "filename": file.filename, "chunks": len(chunks)}
+
+@app.get("/sessions")
+def get_sessions():
+    """获取所有会话的摘要列表（用于前端显示历史对话列表）"""
+    return session_manager.get_all_sessions()
+
+@app.get("/sessions/{session_id}")
+def get_session_messages(session_id: str):
+    """获取指定会话的完整消息历史（用于前端切换会话/刷新恢复）"""
+    return {
+        "session_id": session_id,
+        "messages": session_manager.get_full_context(session_id)
+    }
+
+@app.delete("/sessions/{session_id}")
+def delete_session(session_id: str):
+    """删除指定会话"""
+    session_manager.delete_session(session_id)
+    return {"status": "ok"}
+
+@app.delete("/sessions")
+def clear_all_sessions():
+    """清空所有会话"""
+    # 遍历并删除所有会话
+    sessions = session_manager.get_all_sessions()
+    for sid in sessions.keys():
+        session_manager.delete_session(sid)
+    return {"status": "ok"}

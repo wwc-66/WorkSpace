@@ -53,10 +53,16 @@ class LLMClient:
         _provider = provider or self.default_provider
         _base_url = base_url or self.default_base_url
 
+        # 在调用前，确保 messages 中包含 system 消息
+        system_message = {"role": "system", "content": f"你是 {model}，一个由用户配置的 AI 助手。"}
+        # 如果 messages 中没有 system 消息，插入到开头
+        if not messages or messages[0].get("role") != "system":
+            _messages = [system_message] + messages
+
         if _provider == "dashscope":
-            return self._call_dashscope_messages(messages, _api_key, _model)
+            return self._call_dashscope_messages(_messages, _api_key, _model)
         elif _provider == "openai_compatible":
-            return self._call_openai_compatible_messages(messages, _api_key, _model, _base_url)
+            return self._call_openai_compatible_messages(_messages, _api_key, _model, _base_url)
         else:
             raise ValueError(f"不支持的 provider: {_provider}")
 
