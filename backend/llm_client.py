@@ -54,8 +54,9 @@ class LLMClient:
         _base_url = base_url or self.default_base_url
 
         # 在调用前，确保 messages 中包含 system 消息
-        system_message = {"role": "system", "content": f"你是 {model}，一个由用户配置的 AI 助手。"}
+        system_message = {"role": "system", "content": f"你是 {_model}，一个由用户配置的 AI 助手。"}
         # 如果 messages 中没有 system 消息，插入到开头
+        _messages = messages.copy()  # 避免修改原始列表
         if not messages or messages[0].get("role") != "system":
             _messages = [system_message] + messages
 
