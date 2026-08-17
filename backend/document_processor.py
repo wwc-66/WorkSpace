@@ -39,7 +39,8 @@ def chunk_text(text:str, chunk_size: int = 500, overlap:int = 50) -> list[str]:
         if end >= text_length:
             chunks.append(text[start:])
         #将当前chunk添加到chunks
-        chunks.append(text[start:end])
+        else:
+            chunks.append(text[start:end])
         #更新start位置，考虑重叠部分（overlap）
         start = end - overlap
     
