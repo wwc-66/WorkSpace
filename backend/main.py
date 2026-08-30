@@ -42,6 +42,14 @@ class AskRequest(BaseModel):
     provider: str = None
     base_url: str = None
 
+def extract_source(chunk: str) -> str:
+    """从 chunk 文本中提取来源文件名"""
+    if chunk.startswith("[来源:"):
+        end = chunk.find("]")
+        if end != -1:
+            return chunk[4:end].strip()
+    return "未知来源"
+
 api_key = os.getenv("DASHSCOPE_API_KEY")
 model = "qwen-plus"
 
@@ -81,8 +89,8 @@ def generate(req: GenerateRequest):
     # 1. 获取或创建会话
     session_id = session_manager.get_or_create_session(req.session_id)[0]
 
-    # 2. 将用户消息加入会话历史
-    session_manager.add_message(session_id, "user", req.prompt)
+    # 2. 将用户消息加入会话历史（记录当时使用的模型名）
+    session_manager.add_message(session_id, "user", req.prompt, extra={"model": req.model})
 
     # 3. 获取完整上下文
     context = session_manager.get_full_context(session_id)
@@ -96,8 +104,8 @@ def generate(req: GenerateRequest):
         base_url=req.base_url
     )
 
-    # 5. 将助手回复加入会话历史
-    session_manager.add_message(session_id, "assistant", response)
+    # 5. 将助手回复加入会话历史（记录当时使用的模型名）
+    session_manager.add_message(session_id, "assistant", response, extra={"model": req.model})
 
     return {
         "response": response,
@@ -112,8 +120,44 @@ def ask(req: AskRequest):
 
     # 2. 检索相关文档块
     results = vector_store.search(req.question, top_k=3)
+    #增加日志记录功能用于开发阶段的evaluation和retrieval分析
+    import json
+    from datetime import datetime
+
+    def log_rag_query(question, results, filtered_results, answer, session_id):
+        """记录一次 RAG 查询的完整信息"""
+        log_entry = {
+            "timestamp": datetime.now().isoformat(),
+            "session_id": session_id,
+            "question": question,
+            "top_k_results": [
+                {
+                    "chunk": chunk,
+                    "score": score,
+                    "source": extract_source(chunk)
+                }
+                for chunk, score in results
+            ],
+            "filtered_results": [
+                {
+                    "chunk": chunk,
+                    "score": score,
+                    "source": extract_source(chunk)
+                }
+                for chunk, score in filtered_results
+            ],
+            "final_answer": answer
+        }
+        with open("logs/rag_eval.jsonl", "a", encoding="utf-8") as f:
+            f.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
+    
+    # 在检索完成后，生成 sources
+    sources = [chunk[:100] + "..." for chunk, _ in results]
     if results and results[0][1] < 0.7:
-        return {"answer": "未找到足够相关的信息，请尝试换一种问法或上传更相关的文档。"}
+        # 只取第一个
+        results = results[:1]
+        #不直接以硬编码的形式返回错误，继续走后续流程，让模型判断，同时将sources设为相关度分数小于阈值但最高的文档
+        sources = [chunk[:100] + "..." for chunk, _ in results]
 
     # 3. 构造上下文
     context = "\n\n".join([chunk for chunk, _ in results])
@@ -123,7 +167,7 @@ def ask(req: AskRequest):
 
     # 5. 将用户消息（含检索上下文）加入会话历史
     # 注意：这里把检索结果作为用户消息的一部分存入，让模型能回顾
-    session_manager.add_message(session_id, "user", f"[资料参考]\n{context}\n\n[用户问题]\n{req.question}")
+    session_manager.add_message(session_id, "user", f"[资料参考]\n{context}\n\n[用户问题]\n{req.question}", extra={"model": req.model})
 
     # 6. 获取完整上下文
     full_context = session_manager.get_full_context(session_id)
@@ -141,13 +185,30 @@ def ask(req: AskRequest):
         # 会话已创建，返回 session_id 让前端保持同一会话
         return {"error": f"模型调用失败: {str(e)}", "session_id": session_id}
 
-    # 8. 将助手回复加入会话历史
-    session_manager.add_message(session_id, "assistant", response)
+    # 8. 将助手回复加入会话历史（记录模型名与参考来源）
+    session_manager.add_message(
+        session_id,
+        "assistant",
+        response,
+        extra={"sources": sources, "model": req.model}
+    )
+
+    # Evaluation阶段专用：生成日志
+    threshold = 0.7  # 与现有阈值保持一致
+    filtered_results = [(chunk, score) for chunk, score in results if score >= threshold]
+
+    log_rag_query(
+        question=req.question,
+        results=results,
+        filtered_results=filtered_results,
+        answer=response,
+        session_id=session_id
+    )
 
     return {
         "answer": response,
         "session_id": session_id,
-        "sources": [chunk[:100] + "..." for chunk, _ in results]
+        "sources": sources
     }
 
 @app.post("/upload")

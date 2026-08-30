@@ -6,4 +6,9 @@ __pycache__/
 *.log
 .DS_Store
 rag_data/
-frontend/
+eval_data/
+logs
+eval_data/
+eval_results.json
+node_modules/
+dist/

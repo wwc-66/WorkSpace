@@ -1,0 +1,146 @@
+{
+  "conversation_context": [
+    {
+      "id": "C01",
+      "name": "基础短期记忆",
+      "steps": [
+        {"role": "user", "content": "测试代码是 QX-72941"},
+        {"role": "assistant", "content": ""},
+        {"role": "user", "content": "刚才的测试代码是什么？"}
+      ],
+      "expected": "QX-72941",
+      "metric": "exact_match"
+    },
+    {
+      "id": "C02",
+      "name": "多轮干扰后记忆",
+      "steps": [
+        {"role": "user", "content": "测试代码是 MK-38152"},
+        {"role": "assistant", "content": ""},
+        {"role": "user", "content": "今天是星期几？"},
+        {"role": "assistant", "content": ""},
+        {"role": "user", "content": "1+1等于几？"},
+        {"role": "assistant", "content": ""},
+        {"role": "user", "content": "测试代码是什么？"}
+      ],
+      "expected": "MK-38152",
+      "metric": "exact_match"
+    },
+    {
+      "id": "C03",
+      "name": "跨模型 Context",
+      "steps": [
+        {"role": "user", "content": "测试代码是 DS-60417"},
+        {"role": "assistant", "content": ""},
+        {"role": "user", "content": "刚才的测试代码是什么？"}
+      ],
+      "expected": "DS-60417",
+      "metric": "exact_match",
+      "note": "需手动切换模型后测试"
+    },
+    {
+      "id": "C04",
+      "name": "页面重载后 Context",
+      "steps": [
+        {"role": "user", "content": "测试代码是 RV-92834"},
+        {"role": "assistant", "content": ""},
+        {"role": "user", "content": "测试代码是什么？"}
+      ],
+      "expected": "RV-92834",
+      "metric": "exact_match",
+      "note": "需在步骤间手动刷新页面"
+    },
+    {
+      "id": "C05",
+      "name": "Conversation 隔离",
+      "steps": [
+        {"role": "user", "content": "测试代码是 NA-51726"},
+        {"role": "assistant", "content": ""},
+        {"role": "user", "content": "测试代码是什么？"}
+      ],
+      "expected": "NA-51726",
+      "metric": "exact_match",
+      "note": "需新建 Conversation 后测试（参考：步骤1-2在A会话，步骤3在B会话）"
+    }
+  ],
+  "rag": [
+    {
+      "id": "R01",
+      "name": "Orion 发布日期",
+      "question": "Orion项目什么时候正式发布？",
+      "expected_answer": "2026年3月17日",
+      "expected_evidence_file": "orion.txt",
+      "metrics": ["retrieval_hit", "answer_accuracy"]
+    },
+    {
+      "id": "R02",
+      "name": "Cedar 存储引擎",
+      "question": "哪个项目使用Cedar作为存储引擎？",
+      "expected_answer": "Orion",
+      "expected_evidence_file": "orion.txt",
+      "metrics": ["retrieval_hit", "answer_accuracy"]
+    },
+    {
+      "id": "R03",
+      "name": "Atlas 数据处理平台",
+      "question": "Atlas数据处理平台由哪个团队负责？",
+      "expected_answer": "Vega",
+      "expected_evidence_file": "vega.txt",
+      "metrics": ["retrieval_hit", "answer_accuracy"]
+    },
+    {
+      "id": "R04",
+      "name": "Bluebell 备份频率",
+      "question": "Bluebell多久进行一次完整备份？",
+      "expected_answer": "每天一次，凌晨2:30",
+      "expected_evidence_file": "bluebell.txt",
+      "metrics": ["retrieval_hit", "answer_accuracy"]
+    },
+    {
+      "id": "R05",
+      "name": "不存在的利润信息",
+      "question": "Orion项目的年度利润是多少？",
+      "expected_answer": "信息不足",
+      "expected_evidence_file": null,
+      "metrics": ["answer_accuracy"]
+    }
+  ],
+  "instruction_following": [
+    {
+      "id": "I01",
+      "name": "三点总结",
+      "prompt": "请用且仅用3个要点总结以下内容：\n\n人工智能（AI）是计算机科学的一个分支，致力于创造能够执行通常需要人类智能的任务的系统。这些任务包括视觉感知、语音识别、决策制定和语言翻译等。机器学习是AI的一个子集，它使计算机能够从数据中学习。深度学习是机器学习的一个子集，使用多层神经网络来处理复杂模式。近年来，大语言模型（LLM）在自然语言处理领域取得了突破性进展。",
+      "expected": "恰好3项",
+      "metric": "exact_count",
+      "expected_count": 3
+    },
+    {
+      "id": "I02",
+      "name": "纯 YES 回答",
+      "prompt": "只回答YES或NO：2是偶数吗？",
+      "expected": "YES",
+      "metric": "exact_match"
+    },
+    {
+      "id": "I03",
+      "name": "JSON 输出",
+      "prompt": "只输出JSON，键为name和type，内容是苹果和水果",
+      "expected": "{\"name\": \"苹果\", \"type\": \"水果\"}",
+      "metric": "json_match"
+    },
+    {
+      "id": "I04",
+      "name": "信息不足时不猜测",
+      "prompt": "如果以下信息无法推出答案，只回答'信息不足'：\n\n张三昨天去了图书馆。\n\n请问：张三昨天去了哪个图书馆？",
+      "expected": "信息不足",
+      "metric": "exact_match"
+    },
+    {
+      "id": "I05",
+      "name": "忠于原文",
+      "prompt": "请只根据以下原文回答，不添加外部事实：\n\n地球是太阳系的第三颗行星，表面71%覆盖着水。\n\n问题：地球表面有多少覆盖着水？",
+      "expected": "71%",
+      "metric": "answer_accuracy"
+    }
+  ]
+}

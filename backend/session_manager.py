@@ -44,18 +44,19 @@ class SessionManager:
         self._update_activity(session_id)
         return session_id, self._sessions[session_id]
 
-    def add_message(self, session_id: str, role: str, content: str):
+    def add_message(self, session_id: str, role: str, content: str, extra: dict = None):
         """
         向指定会话添加一条消息。
         role: "user" 或 "assistant" 或 "system"
+        extra: 可选附加字段，如 {"sources": [...]}
         """
         if session_id not in self._sessions:
             self._sessions[session_id] = []
 
-        self._sessions[session_id].append({
-            "role": role,
-            "content": content
-        })
+        message = {"role": role, "content": content}
+        if extra:
+            message.update(extra)
+        self._sessions[session_id].append(message)
 
         # 如果消息长度超过限制，截断最早的消息（保留最近的）
         if len(self._sessions[session_id]) > self._max_history_length:

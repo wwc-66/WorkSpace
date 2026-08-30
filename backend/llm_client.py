@@ -9,8 +9,8 @@ class LLMClient:
     def __init__(self):
         self.default_api_key = os.getenv("DASHSCOPE_API_KEY")
         self.default_model = os.getenv("LLM_MODEL", "qwen-plus")
-        self.default_provider = os.getenv("LLM_PROVIDER", "dashscope")  # 新增：默认 provider
-        self.default_base_url = os.getenv("LLM_BASE_URL", None)  # 新增：自定义 API 地址
+        self.default_provider = os.getenv("LLM_PROVIDER", "dashscope")
+        self.default_base_url = os.getenv("LLM_BASE_URL", None)
 
     def generate(self, prompt: str, api_key: str = None, model: str = None, provider: str = None, base_url: str = None) -> str:
         _api_key = api_key or self.default_api_key
@@ -55,10 +55,11 @@ class LLMClient:
 
         # 在调用前，确保 messages 中包含 system 消息
         system_message = {"role": "system", "content": f"你是 {_model}，一个由用户配置的 AI 助手。"}
+        # 只保留 role/content 字段，避免把存储的展示字段（model、sources 等）传给模型 API
+        _messages = [{"role": m.get("role", "user"), "content": m.get("content", "")} for m in messages]
         # 如果 messages 中没有 system 消息，插入到开头
-        _messages = messages.copy()  # 避免修改原始列表
-        if not messages or messages[0].get("role") != "system":
-            _messages = [system_message] + messages
+        if not _messages or _messages[0].get("role") != "system":
+            _messages = [system_message] + _messages
 
         if _provider == "dashscope":
             return self._call_dashscope_messages(_messages, _api_key, _model)
