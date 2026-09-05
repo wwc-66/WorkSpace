@@ -96,7 +96,7 @@ def generate(req: GenerateRequest):
     context = session_manager.get_full_context(session_id)
 
     # 4. 调用模型
-    response = llm_client.generate_with_messages(
+    llm_result = llm_client.generate_with_messages(
         messages=context,
         api_key=req.api_key,
         model=req.model,
@@ -104,12 +104,17 @@ def generate(req: GenerateRequest):
         base_url=req.base_url
     )
 
-    # 5. 将助手回复加入会话历史（记录当时使用的模型名）
-    session_manager.add_message(session_id, "assistant", response, extra={"model": req.model})
+    #提取文本
+    response = llm_result.content
+
+    # 5. 将助手回复加入会话历史（记录当时使用的模型名）（顺手加入metrics，便于未来调取）
+    session_manager.add_message(session_id, "assistant", response,
+                                extra={"model": req.model,"latency_ms":llm_result.latency_ms, "tokens":llm_result.total_tokens})
 
     return {
         "response": response,
-        "session_id": session_id
+        "session_id": session_id,
+        "latency_ms": llm_result.latency_ms
     }
 
 @app.post("/ask")
@@ -174,13 +179,14 @@ def ask(req: AskRequest):
 
     # 7. 调用模型
     try:
-        response = llm_client.generate_with_messages(
+        llm_result = llm_client.generate_with_messages(
             messages=full_context,
             api_key=req.api_key,
             model=req.model,
             provider=req.provider,
             base_url=req.base_url
         )
+        response = llm_result.content
     except Exception as e:
         # 会话已创建，返回 session_id 让前端保持同一会话
         return {"error": f"模型调用失败: {str(e)}", "session_id": session_id}
@@ -190,7 +196,7 @@ def ask(req: AskRequest):
         session_id,
         "assistant",
         response,
-        extra={"sources": sources, "model": req.model}
+        extra={"sources": sources, "model": req.model, "latency_ms": llm_result.latency_ms, "tokens": llm_result.total_tokens}
     )
 
     # Evaluation阶段专用：生成日志
@@ -208,7 +214,8 @@ def ask(req: AskRequest):
     return {
         "answer": response,
         "session_id": session_id,
-        "sources": sources
+        "sources": sources,
+        "latency_ms": llm_result.latency_ms
     }
 
 @app.post("/upload")

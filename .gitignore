@@ -5,10 +5,16 @@ __pycache__/
 .vscode/
 *.log
 .DS_Store
-rag_data/
+bluebell.txt
+orion.txt
+text1.txt
+vega.txt
 eval_data/
 logs
 eval_data/
 eval_results.json
 node_modules/
 dist/
+eval_results_deepseek-v4-flash.json
+eval_results_qwen-plus.json
+eval_results_qwen3.8_27b.json

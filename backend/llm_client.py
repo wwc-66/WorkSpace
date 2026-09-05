@@ -2,8 +2,23 @@ import os
 import requests
 import json
 from dotenv import load_dotenv
+from dataclasses import dataclass
+from typing import Optional
+import time
 
 load_dotenv()
+
+@dataclass
+class LLMResponse:
+    content: str
+    model: str
+    provider: str
+    latency_ms: float
+    input_tokens: Optional[int] = None
+    output_tokens: Optional[int] = None
+    total_tokens: Optional[int] = None
+    finish_reason: Optional[str] = None
+    error: Optional[str] = None
 
 class LLMClient:
     def __init__(self):
@@ -47,7 +62,7 @@ class LLMClient:
         return response.choices[0].message.content
 
     # 保留 generate_with_messages 的多轮对话版本，类似修改
-    def generate_with_messages(self, messages: list[dict], api_key: str = None, model: str = None, provider: str = None, base_url: str = None) -> str:
+    def generate_with_messages(self, messages: list[dict], api_key: str = None, model: str = None, provider: str = None, base_url: str = None) -> LLMResponse:
         _api_key = api_key or self.default_api_key
         _model = model or self.default_model
         _provider = provider or self.default_provider
@@ -68,23 +83,77 @@ class LLMClient:
         else:
             raise ValueError(f"不支持的 provider: {_provider}")
 
-    def _call_dashscope_messages(self, messages: list[dict], api_key: str, model: str) -> str:
+    def _call_dashscope_messages(self, messages: list[dict], api_key: str, model: str) -> LLMResponse:
         from dashscope import Generation
-        response = Generation.call(
-            model=model,
-            messages=messages,
-            api_key=api_key
-        )
-        return response.output.text
+        start_time  = time.perf_counter()
+        try:
+            response = Generation.call(
+                model=model,
+                messages=messages,
+                api_key=api_key
+            )
+            latency_ms = (time.perf_counter() - start_time) * 1000
 
-    def _call_openai_compatible_messages(self, messages: list[dict], api_key: str, model: str, base_url: str = None) -> str:
+            #提取token用量
+            usage = getattr(response, 'usage', None)
+            input_tokens = getattr(usage, 'input_tokens', None) if usage else None
+            output_tokens = getattr(usage, 'output_tokens', None) if usage else None
+            total_tokens = getattr(usage, 'total_tokens', None) if usage else None
+
+            #提取 finish_reason
+            finish_reason = None
+            if hasattr(response, 'output') and hasattr(response.output, 'choices') and response.output.choices:
+                finish_reason = response.output.choices[0].get('finish_reason', None)
+
+            return LLMResponse(
+                content=response.output.text,
+                model=model,
+                provider="dashscope",
+                latency_ms=round(latency_ms, 2),
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                total_tokens=total_tokens,
+                finish_reason=finish_reason
+            )
+        except Exception as e:
+            return LLMResponse(
+                content="",
+                model=model,
+                provider="dashscope",
+                latency_ms=0,
+                error=str(e)
+            )
+
+    def _call_openai_compatible_messages(self, messages: list[dict], api_key: str, model: str, base_url: str = None) -> LLMResponse:
         import openai
         client = openai.OpenAI(
             api_key=api_key,
             base_url=base_url or "https://api.deepseek.com/v1"
         )
-        response = client.chat.completions.create(
-            model=model,
-            messages=messages
-        )
-        return response.choices[0].message.content
+        start_time = time.perf_counter()
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=messages
+            )
+            latency_ms = (time.perf_counter() - start_time) * 1000
+            choice = response.choices[0]
+
+            return LLMResponse(
+                content=choice.message.content,
+                model=model,
+                provider="openai_compatible",
+                latency_ms=round(latency_ms, 2),
+                input_tokens=getattr(response.usage, 'prompt_tokens', None),
+                output_tokens=getattr(response.usage, 'completion_tokens', None),
+                total_tokens=getattr(response.usage, 'total_tokens', None),
+                finish_reason=getattr(choice, 'finish_reason', None)
+            )
+        except Exception as e:
+            return LLMResponse(
+                content="",
+                model=model,
+                provider="openai_compatible",
+                latency_ms=0,
+                error=str(e)
+            )
