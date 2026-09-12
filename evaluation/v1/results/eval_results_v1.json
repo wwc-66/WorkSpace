@@ -1,0 +1,163 @@
+{
+  "timestamp": "2026-08-30T15:08:49.355097",
+  "summary": {
+    "total": 15,
+    "passed": 12,
+    "failed": 3,
+    "pass_rate": 80.0
+  },
+  "details": {
+    "conversation_context": [
+      {
+        "id": "C01",
+        "name": "基础短期记忆",
+        "passed": true,
+        "actual": "刚才您提供的测试代码是：**QX-72941**。\n\n这是您在第一条消息中明确输入的字符串，我已将其识别为本次会话的指定测试标识符（Test Code）。目前它尚未被关联到具体的功能、系统或测试用例——它的含义和用途取决于您的上下文（例如：内部系统编号、测试用例ID、环境密钥、或验证令牌等）。\n\n如需进一步操作，请告知：\n- 该代码对应的具体测试目标（例如：“验证用户登录接口的错误码 QX-72941”）  \n- 相关输入数据、预期行为或环境要求  \n- 或直接发送待测内容（如API请求、代码片段、配置文本等）\n\n我将严格依据您的指令执行验证、解析、模拟或分析。",
+        "expected": "QX-72941",
+        "note": ""
+      },
+      {
+        "id": "C02",
+        "name": "多轮干扰后记忆",
+        "passed": true,
+        "actual": "当前有效的测试代码是：**MK-38152** ✅  \n\n这是您在上一条消息中明确提供的最新测试标识符，已覆盖此前的 QX-72941。  \n我将持续以 **MK-38152** 作为本次会话的基准测试代号，用于所有后续验证、模拟或上下文关联操作。\n\n如需：\n- 查看 MK-38152 对应的预设测试规范（若您有标准模板）  \n- 生成带该代码的测试报告/日志样例  \n- 执行某项具体任务（如校验、计算、解析、模拟响应）  \n\n请随时告知 — 我已准备就绪。",
+        "expected": "MK-38152",
+        "note": ""
+      },
+      {
+        "id": "C03",
+        "name": "跨模型 Context",
+        "passed": true,
+        "actual": "刚才您提供的测试代码是：**DS-60417** ✅  \n\n这是您在上一条消息中明确输入的最新测试标识符，当前会话中**唯一有效且正在使用的测试代码**。  \n（已自动覆盖之前的 MK-38152 和 QX-72941）\n\n如需进一步操作，请随时说明——例如：  \n• “用 DS-60417 验证以下 JSON 是否符合数据契约”  \n• “生成 DS-60417 对应的测试报告标题和编号前缀”  \n• “检查该代码是否符合我司测试码命名规范（如：DS-XXXXX）”  \n\n我将始终以 DS-60417 为上下文核心，确保一致性与可追溯性。",
+        "expected": "DS-60417",
+        "note": "需手动切换模型后测试"
+      },
+      {
+        "id": "C04",
+        "name": "页面重载后 Context",
+        "passed": true,
+        "actual": "当前有效的测试代码是：**RV-92834** ✅  \n\n这是您最新指定并确认的测试标识符，已全程生效，所有后续交互均以此为准。\n\n如需下一步操作，请直接说明——例如：  \n▸ “用 RV-92834 验证以下 API 响应是否符合预期”  \n▸ “生成 RV-92834 的测试执行记录模板（含时间戳、环境、结果字段）”  \n▸ “检查字符串 'RV-92834' 是否满足正则规则 ^[A-Z]{2}-\\d{5}$”  \n▸ 或任何其他具体任务  \n\n我将确保每一步输出清晰标注 **RV-92834**，保障可追溯性与一致性。请开始 👇",
+        "expected": "RV-92834",
+        "note": "需在步骤间手动刷新页面"
+      },
+      {
+        "id": "C05",
+        "name": "Conversation 隔离",
+        "passed": true,
+        "actual": "当前有效的测试代码是：**NA-51726** ✅  \n\n这是您最新明确指定的测试标识符，已全程生效，并作为本会话中所有后续操作的唯一基准。\n\n如需立即开展工作，请告诉我具体任务——例如：  \n• “校验以下 JSON 是否满足 NA-51726 定义的数据完整性规则”  \n• “生成 NA-51726 对应的测试用例（含前置条件、操作步骤、期望结果）”  \n• “检查字符串 'NA-51726' 是否符合正则 ^[A-Z]{2}-\\d{5}$ —— 是，匹配成功 ✅”  \n• 或其他任意需求（接口模拟、日志分析、合规比对等）\n\n我将确保每一步输出清晰标注 **NA-51726**，保持上下文严格一致、过程可追溯。请随时下达指令 👇",
+        "expected": "NA-51726",
+        "note": "需新建 Conversation 后测试（参考：步骤1-2在A会话，步骤3在B会话）"
+      }
+    ],
+    "rag": [
+      {
+        "id": "R01",
+        "name": "Orion 发布日期",
+        "passed": false,
+        "actual_answer": "Orion 项目正式发布的日期是 **2026 年 3 月 17 日**。",
+        "expected_answer": "2026年3月17日",
+        "retrieval_hit": true,
+        "answer_accuracy": false,
+        "sources": [
+          "[来源: orion.txt]\nOrion 项目的正式发布日期是 2026 年 3 月 17 日。\nOrion 使用 Cedar 作为内部存储引擎。\n项目的技术负责人是林越。...",
+          "[来源: vega.txt]\nVega 团队的负责人是陈舟。\nVega 的季度预算为 420 万元。\n该团队主要负责 Atlas 数据处理平台。...",
+          "[来源: bluebell.txt]\nBluebell 系统的数据保留周期为 45 天。\n系统每天凌晨 2:30 执行一次完整备份。\n故障恢复负责人是周宁。..."
+        ]
+      },
+      {
+        "id": "R02",
+        "name": "Cedar 存储引擎",
+        "passed": true,
+        "actual_answer": "Orion 项目使用 Cedar 作为内部存储引擎。",
+        "expected_answer": "Orion",
+        "retrieval_hit": true,
+        "answer_accuracy": true,
+        "sources": [
+          "[来源: orion.txt]\nOrion 项目的正式发布日期是 2026 年 3 月 17 日。\nOrion 使用 Cedar 作为内部存储引擎。\n项目的技术负责人是林越。..."
+        ]
+      },
+      {
+        "id": "R03",
+        "name": "Atlas 数据处理平台",
+        "passed": true,
+        "actual_answer": "Atlas 数据处理平台由 Vega 团队负责。",
+        "expected_answer": "Vega",
+        "retrieval_hit": true,
+        "answer_accuracy": true,
+        "sources": [
+          "[来源: vega.txt]\nVega 团队的负责人是陈舟。\nVega 的季度预算为 420 万元。\n该团队主要负责 Atlas 数据处理平台。..."
+        ]
+      },
+      {
+        "id": "R04",
+        "name": "Bluebell 备份频率",
+        "passed": false,
+        "actual_answer": "Bluebell 系统每天进行一次完整备份，具体时间为**每天凌晨 2:30**。",
+        "expected_answer": "每天一次，凌晨2:30",
+        "retrieval_hit": true,
+        "answer_accuracy": false,
+        "sources": [
+          "[来源: bluebell.txt]\nBluebell 系统的数据保留周期为 45 天。\n系统每天凌晨 2:30 执行一次完整备份。\n故障恢复负责人是周宁。...",
+          "[来源: orion.txt]\nOrion 项目的正式发布日期是 2026 年 3 月 17 日。\nOrion 使用 Cedar 作为内部存储引擎。\n项目的技术负责人是林越。...",
+          "[来源: vega.txt]\nVega 团队的负责人是陈舟。\nVega 的季度预算为 420 万元。\n该团队主要负责 Atlas 数据处理平台。..."
+        ]
+      },
+      {
+        "id": "R05",
+        "name": "不存在的利润信息",
+        "passed": false,
+        "actual_answer": "根据提供的资料，没有任何文件提及 Orion 项目的**年度利润**相关数据（如收入、成本、利润率、财务预测或实际盈利情况等）。资料仅包含以下信息：\n\n- Orion 项目正式发布日期：2026 年 3 月 17 日  \n- 内部存储引擎：Cedar  \n- 技术负责人：林越  \n\n由于项目尚未发布（当前日期早于 2026 年 3 月），且无任何财务指标披露，**无法推算或确定其年度利润**。\n\n✅ 结论：**Orion 项目的年度利润在现有资料中未提供，无法回答。**  \n如需进一步分析，需补充财务规划文档、商业计划书或财报类信息。\n\n是否需要我帮您起草一份利润测算框架（例如基于典型 SaaS 项目假设）？",
+        "expected_answer": "信息不足",
+        "retrieval_hit": false,
+        "answer_accuracy": true,
+        "sources": [
+          "[来源: orion.txt]\nOrion 项目的正式发布日期是 2026 年 3 月 17 日。\nOrion 使用 Cedar 作为内部存储引擎。\n项目的技术负责人是林越。...",
+          "[来源: vega.txt]\nVega 团队的负责人是陈舟。\nVega 的季度预算为 420 万元。\n该团队主要负责 Atlas 数据处理平台。...",
+          "[来源: bluebell.txt]\nBluebell 系统的数据保留周期为 45 天。\n系统每天凌晨 2:30 执行一次完整备份。\n故障恢复负责人是周宁。..."
+        ]
+      }
+    ],
+    "instruction_following": [
+      {
+        "id": "I01",
+        "name": "三点总结",
+        "passed": true,
+        "actual": "1. 人工智能（AI）是计算机科学分支，旨在构建能执行需人类智能的任务（如视觉感知、语音识别、决策、翻译）的系统。  \n2. 机器学习是AI的子集，使系统能从数据中自动学习；深度学习是机器学习的子集，依托多层神经网络处理复杂模式。  \n3. 大语言模型（LLM）是深度学习在自然语言处理领域的突破性应用，显著推动了该领域的发展。",
+        "expected": "恰好3项",
+        "metric": "exact_count"
+      },
+      {
+        "id": "I02",
+        "name": "纯 YES 回答",
+        "passed": true,
+        "actual": "YES",
+        "expected": "YES",
+        "metric": "exact_match"
+      },
+      {
+        "id": "I03",
+        "name": "JSON 输出",
+        "passed": true,
+        "actual": "{\"name\": \"苹果\", \"type\": \"水果\"}",
+        "expected": "{\"name\": \"苹果\", \"type\": \"水果\"}",
+        "metric": "json_match"
+      },
+      {
+        "id": "I04",
+        "name": "信息不足时不猜测",
+        "passed": true,
+        "actual": "信息不足",
+        "expected": "信息不足",
+        "metric": "exact_match"
+      },
+      {
+        "id": "I05",
+        "name": "忠于原文",
+        "passed": true,
+        "actual": "地球表面71%覆盖着水。",
+        "expected": "71%",
+        "metric": "answer_accuracy"
+      }
+    ]
+  }
+}

@@ -17,7 +17,7 @@ BASE_URL = "http://127.0.0.1:8000"
 EVAL_CASES_FILE = "eval_cases.json"
 
 # ==============================================
-# 【手敲清单 第1条 修复版】精确路由映射表
+# 精确路由映射表
 # 原则：先匹配精确的云端模型名，其余全部视为本地 Ollama
 # ==============================================
 
@@ -37,13 +37,7 @@ def get_model_config(model_name: str):
             "provider": "openai_compatible",
             "api_key": os.getenv("DEEPSEEK_API_KEY"),
             "base_url": "https://api.deepseek.com/v1"
-        },
-        # 如果你以后想加 GPT-4o-mini，可以在这里追加
-        # "gpt-4o-mini": {
-        #     "provider": "openai_compatible",
-        #     "api_key": os.getenv("OPENAI_API_KEY"),
-        #     "base_url": None
-        # }
+        }
     }
 
     # 2. 精确匹配：如果在云端映射表中，直接返回
@@ -55,8 +49,7 @@ def get_model_config(model_name: str):
     # 包括 qwen2.5:7b, llama3.1:8b, mistral 等
     return "openai_compatible", "ollama", "http://localhost:11434/v1"
 
-# 你要测试的模型列表（按需增删）
-# 注意：Ollama 里的模型名要和你 `ollama list` 里的一模一样
+# 要测试的模型列表（按需增删）
 MODELS_TO_TEST = [
     "qwen-plus",           # 阿里云通义千问 Plus
     "deepseek-v4-flash",   # DeepSeek V4 Flash（需配置 DEEPSEEK_API_KEY）
@@ -64,12 +57,14 @@ MODELS_TO_TEST = [
 ]
 
 # ==============================================
-# 【手敲清单 第2条】定义哪些 Case 属于“模型敏感类”
+# 定义哪些 Case 属于“模型敏感类”
 # 只有这些 Case 会参与模型质量排名，系统类 Case（C组）只做回归验证
 # ==============================================
 MODEL_SENSITIVE_IDS = {
-    "R01", "R02", "R03", "R04", "R05",  # RAG 组全部依赖模型理解能力
-    "I01", "I02", "I03", "I04", "I05"   # 指令遵循组全部依赖模型推理
+    # RAG 组全部依赖模型理解能力
+    "R01", "R02", "R03", "R04", "R05",
+    # 指令遵循组全部依赖模型推理
+    "I01", "I02", "I03", "I04", "I05"
 }
 # 不在上述集合中的，默认归类为 System Test（如 C01~C05）
 
@@ -177,7 +172,7 @@ def check_retrieval_hit(actual: dict, expected_file: str) -> bool:
     return False
 
 # ==============================================
-# 【手敲清单 第3条】单模型运行函数（核心逻辑）
+# 单模型运行函数
 # 这个函数接受一个 model_name，跑完所有 Cases，返回结构化结果
 # ==============================================
 def run_single_model_eval(model_name: str) -> Dict[str, Any]:
@@ -329,13 +324,13 @@ def run_single_model_eval(model_name: str) -> Dict[str, Any]:
     return results
 
 # ==============================================
-# 【手敲清单 第4条】生成 Markdown 对比报告
+# 生成 Markdown 对比报告
 # ==============================================
 def generate_markdown_report(all_results: List[Dict[str, Any]]):
     lines = []
-    lines.append("# 🧪 模型基准测试对比报告 (Model Benchmark v1)")
+    lines.append("# 模型基准测试对比报告 (Model Benchmark v1)")
     lines.append(f"\n**生成时间**: {datetime.now().isoformat()}")
-    lines.append("\n## 📊 综合对比表")
+    lines.append("\n## 综合对比表")
     lines.append("| 模型 | 总通过率 | 模型敏感通过率 | 系统通过率 | 备注 |")
     lines.append("| :--- | :--- | :--- | :--- | :--- |")
 
@@ -347,17 +342,17 @@ def generate_markdown_report(all_results: List[Dict[str, Any]]):
         sys_rate = f"{s['system']['pass_rate']}%"
         lines.append(f"| {model} | {total_rate} | {ms_rate} | {sys_rate} | - |")
 
-    lines.append("\n## 📈 详细延迟与 Token 消耗")
+    lines.append("\n## 详细延迟与 Token 消耗")
     lines.append("| 模型 | 平均延迟 (ms) | 平均输出 Token |")
     lines.append("| :--- | :--- | :--- |")
-    # 注意：延迟和 Token 数据保存在 eval_results_{model}.json 里，但 main.py 目前没有把 latency 返回到 /ask 接口体里。
+    # 延迟和 Token 数据保存在 eval_results_{model}.json 里，但 main.py 目前没有把 latency 返回到 /ask 接口体里。
     # 虽然我们存到了 session_manager，但 eval_runner 目前拿不到，这里先占位，提示后续优化方向。
     lines.append("| *待扩展* | *待扩展* | *待扩展* |")
     lines.append("\n> ⚠️ 提示：延迟与 Token 数据已记录在会话历史中，当前报告版本未从 /ask 接口透传，后续可升级 API 返回体包含 metrics。")
 
     with open("benchmark_comparison.md", "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
-    print("\n📝 Markdown 报告已生成: benchmark_comparison.md")
+    print("\nMarkdown 报告已生成: benchmark_comparison.md")
 
 # ========== 主入口 ==========
 if __name__ == "__main__":
@@ -385,7 +380,7 @@ if __name__ == "__main__":
     # 生成对比报告
     generate_markdown_report(all_model_results)
 
-    print("\n===== 🎉 全部模型基准测试完成 =====")
+    print("\n===== 全部模型基准测试完成 =====")
     for res in all_model_results:
         s = res["summary"]
         print(f"  {res['model']}: 总通过 {s['passed']}/{s['total']} ({s['pass_rate']}%), 模型敏感 {s['model_sensitive']['passed']}/{s['model_sensitive']['total']} ({s['model_sensitive']['pass_rate']}%)")

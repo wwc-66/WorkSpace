@@ -9,7 +9,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # 直接从 eval_runner 导入模型列表和路由函数，保证配置一致
-from evaluation.eval_runner import MODELS_TO_TEST, get_model_config
+from evaluation.v1.eval_runner_v1 import MODELS_TO_TEST, get_model_config
 
 BASE_URL = "http://127.0.0.1:8000"
 
