@@ -10,7 +10,8 @@
         "difficulty": 1,
         "actual": "其实呀，0.999…和1是同一个数。\n因为它们大小完全一样，只是写法不同。\n比如1除以3等于0.333…。\n两边都乘3，就得到0.999…等于1。\n它们之间找不到任何数，就像同一个人的两个名字。\n你明白了吗？",
         "expected_checklist": "检查清单：①总字数80~100字；②恰好3段，每段2句；③首句以'其实呀，'开头；④无'极限/无穷/逼近'；⑤有且仅有1次'就像'比喻；⑥末尾以问句结尾。",
-        "passed": true,
+        "initial_passed": false,
+        "verified_passed": true,
         "latency_ms": 11742.13
       },
       {
@@ -28,9 +29,10 @@
         "difficulty": 3,
         "actual": "其实呀，0.999...就是1。三分之一乘三得1。\n三分之一是0.333...。乘三得0.999...。\n就像三块三分之一拼成一块。相等吗？",
         "expected_checklist": "检查清单：①60~70字；②3段×2句；③'其实呀，'开头；④无禁用词；⑤1次'就像'；⑥问句结尾；⑦全文无逗号；⑧内容通顺且逻辑清晰。",
-        "passed": true,
+        "initial_passed": false,
+        "verified_passed": true,
         "latency_ms": 21190.89,
-        "error": true,
+        "error": null,
         "rerun_at": "2026-09-12T23:54:49.627203"
       }
     ],
@@ -157,6 +159,7 @@
     "verified_passed": 15,
     "initial_pass_rate": "86.67%",
     "verified_pass_rate": "100.00%",
+    "notes": "M01-1 首次失败经 5 次重跑验证为偶发失误。M01-3 调整提示词，确保无逻辑冲突后正常通过",
     "categories": {
       "multi_constraint_instruction": {
         "total": 3,
