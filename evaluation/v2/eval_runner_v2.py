@@ -42,11 +42,7 @@ from evaluation.v1.eval_runner_v1 import MODELS_TO_TEST, get_model_config, BASE_
 # ============================================================
 # 模型池
 # ============================================================
-MODELS_TO_TEST = [
-    "qwen-plus",
-    "deepseek-v4-flash",
-    "qwen3.8:27b",
-]
+MODELS_TO_TEST = ["deepseek-flash"]
 
 # ============================================================
 # 工具函数（call_ask / call_generate）

@@ -1,0 +1,143 @@
+{
+  "timestamp": "2026-09-12T23:58:20.559622",
+  "config": {
+    "M01-1": {
+      "model": "deepseek-flash",
+      "repeat": 5
+    },
+    "M01-2": {
+      "model": "deepseek-flash",
+      "repeat": 5
+    }
+  },
+  "results": {
+    "M01-1": [
+      {
+        "run_index": 1,
+        "actual": "其实呀，0.999...就是1。它们写法不同，大小一样。\n把它们乘10，分别得9.999...和10。相减后，两边都得到9。\n就像两件外套，里面是同一个人。所以0.999...等于1，你懂了吗？",
+        "error": null,
+        "num_segments": 3,
+        "sentences_per_segment": [
+          2,
+          2,
+          2
+        ],
+        "format_ok": true
+      },
+      {
+        "run_index": 2,
+        "actual": "其实呀，0.999…和1表示同一个数。它们之间没有任何空隙。\n\n把0.999…看成九角九分九厘再加一点点。就像同一个人有两个名字。\n\n所以0.999…和1完全相等。小朋友，你懂了吗？",
+        "error": null,
+        "num_segments": 3,
+        "sentences_per_segment": [
+          2,
+          2,
+          2
+        ],
+        "format_ok": true
+      },
+      {
+        "run_index": 3,
+        "actual": "其实呀，0.999…和1只是写法不同。它们表示同一个数，大小完全一样。\n就像同一个人换件衣服，样子不同但仍是他。所以0.999…和1大小相同。\n你看，它们只是不同写法。你明白了吗？",
+        "error": null,
+        "num_segments": 3,
+        "sentences_per_segment": [
+          2,
+          2,
+          2
+        ],
+        "format_ok": true
+      },
+      {
+        "run_index": 4,
+        "actual": "其实呀，0.999…就是1。它们写法不同，大小一样。\n就像一块蛋糕切成三份，合起来还是整块。0.333…乘3就是0.999…。\n而三分之一乘三等于一。你都明白了吗？",
+        "error": null,
+        "num_segments": 3,
+        "sentences_per_segment": [
+          2,
+          2,
+          2
+        ],
+        "format_ok": true
+      },
+      {
+        "run_index": 5,
+        "actual": "其实呀，0.999…和1只差一个写不完的0。它们表示同一个数，只是写法不同。\n1分成三份，每份是0.333…。三份合起来就是0.999…。\n这就像同一杯水倒进不同杯子。你现在明白它们相等了吗？",
+        "error": null,
+        "num_segments": 3,
+        "sentences_per_segment": [
+          2,
+          2,
+          2
+        ],
+        "format_ok": true
+      }
+    ],
+    "M01-2": [
+      {
+        "run_index": 1,
+        "actual": "其实呀，0.999...就是1。它等于3个0.333...。\n因为1/3是0.333...，所以三份是1。这就像三块拼图拼成整圆。\n所以0.999...和1是同一个数。你还能说它们不相等吗？",
+        "error": null,
+        "num_segments": 3,
+        "sentences_per_segment": [
+          2,
+          2,
+          2
+        ],
+        "format_ok": true
+      },
+      {
+        "run_index": 2,
+        "actual": "其实呀，0.999…就是1。它们写法不同而已。\n就像同一张纸的两面。因为0.999…没少一点，所以等于1。\n1/3乘3得1，0.333…乘3得0.999…。这样看，0.999…不也等于1吗？",
+        "error": null,
+        "num_segments": 3,
+        "sentences_per_segment": [
+          2,
+          2,
+          2
+        ],
+        "format_ok": true
+      },
+      {
+        "run_index": 3,
+        "actual": "其实呀，0.999...就是1。写法不同而已。\n\n0.999...和1就像1/3和0.333...。因为1/3×3=1，所以0.333...×3=0.999...。\n\n所以0.999...=1。懂吗？",
+        "error": null,
+        "num_segments": 3,
+        "sentences_per_segment": [
+          2,
+          2,
+          2
+        ],
+        "format_ok": true
+      },
+      {
+        "run_index": 4,
+        "actual": "其实呀，0.999…和1只是写法不同。它们表示同一数。\n就像同一个人有两个名字。因为1分成三份每份是1/3，所以三份合起是1。\n0.333…乘3是0.999…，所以它等于1。你说这是不是同一个数呢？",
+        "error": null,
+        "num_segments": 3,
+        "sentences_per_segment": [
+          2,
+          2,
+          2
+        ],
+        "format_ok": true
+      },
+      {
+        "run_index": 5,
+        "actual": "其实呀，0.999…就是1。它们只是写法不同，大小一样。\n\n就像两张五角凑成一元，样子不同价值同。因为0.333…就是1/3，所以乘3后0.999…和1相等。\n\n所以它们相等。你懂了吗？",
+        "error": null,
+        "num_segments": 3,
+        "sentences_per_segment": [
+          2,
+          2,
+          2
+        ],
+        "format_ok": true
+      }
+    ]
+  },
+  "summary": [
+    "M01-1: 5/5 通过 (100.0%) → 基本稳定",
+    "M01-2: 5/5 通过 (100.0%) → 基本稳定"
+  ]
+}

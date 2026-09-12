@@ -33,7 +33,7 @@ def get_model_config(model_name: str):
             "api_key": os.getenv("DASHSCOPE_API_KEY"),
             "base_url": None
         },
-        "deepseek-v4-flash": {
+        "deepseek-flash": {
             "provider": "openai_compatible",
             "api_key": os.getenv("DEEPSEEK_API_KEY"),
             "base_url": "https://api.deepseek.com/v1"
